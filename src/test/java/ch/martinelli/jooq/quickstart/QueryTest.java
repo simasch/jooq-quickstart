@@ -16,10 +16,9 @@ import static ch.martinelli.jooq.quickstart.database.tables.Category.CATEGORY;
 import static ch.martinelli.jooq.quickstart.database.tables.Film.FILM;
 import static ch.martinelli.jooq.quickstart.database.tables.FilmActor.FILM_ACTOR;
 import static ch.martinelli.jooq.quickstart.database.tables.FilmCategory.FILM_CATEGORY;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.jooq.Records.mapping;
 import static org.jooq.impl.DSL.multiset;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @Transactional
 @SpringBootTest
@@ -32,7 +31,7 @@ class QueryTest {
     void find_all_films() {
         Result<FilmRecord> films = dsl.selectFrom(FILM).fetch();
 
-        assertEquals(1000, films.size());
+        assertThat(films.size()).isEqualTo(1000);
     }
 
     @Test
@@ -49,7 +48,8 @@ class QueryTest {
                 .orderBy(ACTOR.FIRST_NAME, ACTOR.LAST_NAME)
                 .fetch();
 
-        assertEquals(155, actorsOfHorrorFilms.size());
+
+        assertThat(actorsOfHorrorFilms.size()).isEqualTo(155);
     }
 
     @Test
@@ -63,7 +63,7 @@ class QueryTest {
                 .orderBy(FILM_ACTOR.actor().FIRST_NAME, FILM_ACTOR.actor().LAST_NAME)
                 .fetch();
 
-        assertEquals(155, actorsOfHorrorFilms.size());
+        assertThat(actorsOfHorrorFilms.size()).isEqualTo(155);
     }
 
     @Test
@@ -77,7 +77,7 @@ class QueryTest {
                 .orderBy(FILM_ACTOR.actor().FIRST_NAME, FILM_ACTOR.actor().LAST_NAME)
                 .fetchInto(ActorWithFirstAndLastName.class);
 
-        assertEquals(155, actorsOfHorrorFilms.size());
+        assertThat(actorsOfHorrorFilms.size()).isEqualTo(155);
     }
 
     @Test
@@ -88,7 +88,7 @@ class QueryTest {
                 .values("Test", 1)
                 .execute();
 
-        assertEquals(1, insertedRows);
+        assertThat(insertedRows).isEqualTo(1);
     }
 
     @Test
@@ -98,7 +98,7 @@ class QueryTest {
         filmRecord.setLanguageId(1);
         int insertedRows = filmRecord.store();
 
-        assertEquals(1, insertedRows);
+        assertThat(insertedRows).isEqualTo(1);
     }
 
     @Test
@@ -108,8 +108,8 @@ class QueryTest {
                 .where(FILM.FILM_ID.eq(1))
                 .fetchOne();
 
-        assertNotNull(filmRecord);
-        assertEquals("ACADEMY DINOSAUR", filmRecord.getTitle());
+        assertThat(filmRecord).isNotNull();
+        assertThat(filmRecord.getTitle()).isEqualTo("ACADEMY DINOSAUR");
     }
 
     @Test
@@ -125,6 +125,6 @@ class QueryTest {
                 .from(ACTOR)
                 .fetch(mapping(ActorWithFilms::new));
 
-        assertEquals(200, actorWithFilms.size());
+        assertThat(actorWithFilms.size()).isEqualTo(200);
     }
 }
