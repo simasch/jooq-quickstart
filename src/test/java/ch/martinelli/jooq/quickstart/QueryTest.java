@@ -8,8 +8,10 @@ import ch.martinelli.jooq.quickstart.database.tables.FilmCategory;
 import ch.martinelli.jooq.quickstart.database.tables.records.FilmRecord;
 import org.jooq.DSLContext;
 import org.jooq.DataType;
+import org.jooq.Record1;
 import org.jooq.Record2;
 import org.jooq.Result;
+import org.jooq.impl.DSL;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +25,8 @@ import static ch.martinelli.jooq.quickstart.database.tables.Category.CATEGORY;
 import static ch.martinelli.jooq.quickstart.database.tables.Film.FILM;
 import static ch.martinelli.jooq.quickstart.database.tables.FilmActor.FILM_ACTOR;
 import static ch.martinelli.jooq.quickstart.database.tables.FilmCategory.FILM_CATEGORY;
+import static org.jooq.Records.mapping;
+import static org.jooq.impl.DSL.multiset;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -115,5 +119,23 @@ class QueryTest {
 
         assertNotNull(filmRecord);
         assertEquals("ACADEMY DINOSAUR", filmRecord.getTitle());
+    }
+
+    @Test
+    void find_all_actors_with_films() {
+        List<ActorWithFilms> actorWithFilms = dsl
+                .select(
+                        ACTOR.FIRST_NAME,
+                        ACTOR.LAST_NAME,
+                        multiset(dsl
+                                .select(FILM_ACTOR.film().TITLE)
+                                .from(FILM_ACTOR)
+                                .where(FILM_ACTOR.ACTOR_ID.eq(ACTOR.ACTOR_ID.cast(Short.class))))
+                                .convertFrom(r -> r.map(mapping(ActorWithFilms.FilmWithName::new)))
+                )
+                .from(ACTOR)
+                .fetch(mapping(ActorWithFilms::new));
+
+        assertEquals(200, actorWithFilms.size());
     }
 }
