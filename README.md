@@ -7,4 +7,4 @@ https://github.com/fspacek/docker-postgres-sakila
 
 ### Run the Database
 
-    docker run -e POSTGRES_PASSWORD=sakila -p 5432:5432 -d frantiseks/postgres-sakila 
+    docker run -e POSTGRES_PASSWORD=sakila -p 5432:5432 -d simas/postgres-sakila 

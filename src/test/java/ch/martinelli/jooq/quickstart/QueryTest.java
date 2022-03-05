@@ -1,18 +1,9 @@
 package ch.martinelli.jooq.quickstart;
 
-import ch.martinelli.jooq.quickstart.database.tables.Actor;
-import ch.martinelli.jooq.quickstart.database.tables.Category;
-import ch.martinelli.jooq.quickstart.database.tables.Film;
-import ch.martinelli.jooq.quickstart.database.tables.FilmActor;
-import ch.martinelli.jooq.quickstart.database.tables.FilmCategory;
 import ch.martinelli.jooq.quickstart.database.tables.records.FilmRecord;
 import org.jooq.DSLContext;
-import org.jooq.DataType;
-import org.jooq.Record1;
 import org.jooq.Record2;
 import org.jooq.Result;
-import org.jooq.impl.DSL;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -49,10 +40,10 @@ class QueryTest {
         Result<Record2<String, String>> actorsOfHorrorFilms = dsl
                 .select(ACTOR.FIRST_NAME, ACTOR.LAST_NAME)
                 .from(ACTOR)
-                .join(FILM_ACTOR).on(FILM_ACTOR.ACTOR_ID.eq(ACTOR.ACTOR_ID.cast(Short.class)))
-                .join(FILM).on(FILM_ACTOR.FILM_ID.eq(FILM.FILM_ID.cast(Short.class)))
-                .join(FILM_CATEGORY).on(FILM_CATEGORY.FILM_ID.eq(FILM.FILM_ID.cast(Short.class)))
-                .join(CATEGORY).on(FILM_CATEGORY.CATEGORY_ID.eq(CATEGORY.CATEGORY_ID.cast(Short.class)))
+                .join(FILM_ACTOR).on(FILM_ACTOR.ACTOR_ID.eq(ACTOR.ACTOR_ID))
+                .join(FILM).on(FILM_ACTOR.FILM_ID.eq(FILM.FILM_ID))
+                .join(FILM_CATEGORY).on(FILM_CATEGORY.FILM_ID.eq(FILM.FILM_ID))
+                .join(CATEGORY).on(FILM_CATEGORY.CATEGORY_ID.eq(CATEGORY.CATEGORY_ID))
                 .where(CATEGORY.NAME.eq("Horror"))
                 .groupBy(ACTOR.FIRST_NAME, ACTOR.LAST_NAME)
                 .orderBy(ACTOR.FIRST_NAME, ACTOR.LAST_NAME)
@@ -94,7 +85,7 @@ class QueryTest {
         int insertedRows = dsl.
                 insertInto(FILM)
                 .columns(FILM.TITLE, FILM.LANGUAGE_ID)
-                .values("Test", (short) 1)
+                .values("Test", 1)
                 .execute();
 
         assertEquals(1, insertedRows);
@@ -104,7 +95,7 @@ class QueryTest {
     void insert_film_using_record() {
         FilmRecord filmRecord = dsl.newRecord(FILM);
         filmRecord.setTitle("Test");
-        filmRecord.setLanguageId((short) 1);
+        filmRecord.setLanguageId(1);
         int insertedRows = filmRecord.store();
 
         assertEquals(1, insertedRows);
@@ -130,8 +121,8 @@ class QueryTest {
                         multiset(dsl
                                 .select(FILM_ACTOR.film().TITLE)
                                 .from(FILM_ACTOR)
-                                .where(FILM_ACTOR.ACTOR_ID.eq(ACTOR.ACTOR_ID.cast(Short.class))))
-                                .convertFrom(r -> r.map(mapping(ActorWithFilms.FilmWithName::new)))
+                                .where(FILM_ACTOR.ACTOR_ID.eq(ACTOR.ACTOR_ID)))
+                                .convertFrom(r -> r.map(mapping(ActorWithFilms.FilmName::new)))
                 )
                 .from(ACTOR)
                 .fetch(mapping(ActorWithFilms::new));

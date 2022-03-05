@@ -2,8 +2,8 @@ package ch.martinelli.jooq.quickstart;
 
 import java.util.List;
 
-public record ActorWithFilms(String firstName, String lastName, List<FilmWithName> films) {
+public record ActorWithFilms(String firstName, String lastName, List<FilmName> films) {
 
-    public record FilmWithName(String name) {
+    public record FilmName(String name) {
     }
 }
