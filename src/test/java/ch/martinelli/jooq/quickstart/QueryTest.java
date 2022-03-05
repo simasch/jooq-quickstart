@@ -16,11 +16,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 import static ch.martinelli.jooq.quickstart.database.tables.Actor.ACTOR;
 import static ch.martinelli.jooq.quickstart.database.tables.Category.CATEGORY;
 import static ch.martinelli.jooq.quickstart.database.tables.Film.FILM;
 import static ch.martinelli.jooq.quickstart.database.tables.FilmActor.FILM_ACTOR;
 import static ch.martinelli.jooq.quickstart.database.tables.FilmCategory.FILM_CATEGORY;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @Transactional
 @SpringBootTest
@@ -33,12 +37,13 @@ class QueryTest {
     void find_all_films() {
         Result<FilmRecord> films = dsl.selectFrom(FILM).fetch();
 
-        Assertions.assertEquals(1000, films.size());
+        assertEquals(1000, films.size());
     }
 
     @Test
     void find_all_actors_of_horror_films() {
-        Result<Record2<String, String>> horrorFilms = dsl.select(ACTOR.FIRST_NAME, ACTOR.LAST_NAME)
+        Result<Record2<String, String>> actorsOfHorrorFilms = dsl
+                .select(ACTOR.FIRST_NAME, ACTOR.LAST_NAME)
                 .from(ACTOR)
                 .join(FILM_ACTOR).on(FILM_ACTOR.ACTOR_ID.eq(ACTOR.ACTOR_ID.cast(Short.class)))
                 .join(FILM).on(FILM_ACTOR.FILM_ID.eq(FILM.FILM_ID.cast(Short.class)))
@@ -49,12 +54,13 @@ class QueryTest {
                 .orderBy(ACTOR.FIRST_NAME, ACTOR.LAST_NAME)
                 .fetch();
 
-        Assertions.assertEquals(155, horrorFilms.size());
+        assertEquals(155, actorsOfHorrorFilms.size());
     }
 
     @Test
     void find_all_actors_of_horror_films_implicit_join() {
-        Result<Record2<String, String>> horrorFilms = dsl.select(FILM_ACTOR.actor().FIRST_NAME, FILM_ACTOR.actor().LAST_NAME)
+        Result<Record2<String, String>> actorsOfHorrorFilms = dsl
+                .select(FILM_ACTOR.actor().FIRST_NAME, FILM_ACTOR.actor().LAST_NAME)
                 .from(FILM_ACTOR)
                 .join(FILM_CATEGORY).on(FILM_ACTOR.FILM_ID.eq(FILM_CATEGORY.FILM_ID))
                 .where(FILM_CATEGORY.category().NAME.eq("Horror"))
@@ -62,6 +68,52 @@ class QueryTest {
                 .orderBy(FILM_ACTOR.actor().FIRST_NAME, FILM_ACTOR.actor().LAST_NAME)
                 .fetch();
 
-        Assertions.assertEquals(155, horrorFilms.size());
+        assertEquals(155, actorsOfHorrorFilms.size());
+    }
+
+    @Test
+    void find_all_actors_of_horror_films_implicit_join_into_record() {
+        List<ActorWithFirstAndLastName> actorsOfHorrorFilms = dsl
+                .select(FILM_ACTOR.actor().FIRST_NAME, FILM_ACTOR.actor().LAST_NAME)
+                .from(FILM_ACTOR)
+                .join(FILM_CATEGORY).on(FILM_ACTOR.FILM_ID.eq(FILM_CATEGORY.FILM_ID))
+                .where(FILM_CATEGORY.category().NAME.eq("Horror"))
+                .groupBy(FILM_ACTOR.actor().FIRST_NAME, FILM_ACTOR.actor().LAST_NAME)
+                .orderBy(FILM_ACTOR.actor().FIRST_NAME, FILM_ACTOR.actor().LAST_NAME)
+                .fetchInto(ActorWithFirstAndLastName.class);
+
+        assertEquals(155, actorsOfHorrorFilms.size());
+    }
+
+    @Test
+    void insert_film() {
+        int insertedRows = dsl.
+                insertInto(FILM)
+                .columns(FILM.TITLE, FILM.LANGUAGE_ID)
+                .values("Test", (short) 1)
+                .execute();
+
+        assertEquals(1, insertedRows);
+    }
+
+    @Test
+    void insert_film_using_record() {
+        FilmRecord filmRecord = dsl.newRecord(FILM);
+        filmRecord.setTitle("Test");
+        filmRecord.setLanguageId((short) 1);
+        int insertedRows = filmRecord.store();
+
+        assertEquals(1, insertedRows);
+    }
+
+    @Test
+    void find_film() {
+        FilmRecord filmRecord = dsl
+                .selectFrom(FILM)
+                .where(FILM.FILM_ID.eq(1))
+                .fetchOne();
+
+        assertNotNull(filmRecord);
+        assertEquals("ACADEMY DINOSAUR", filmRecord.getTitle());
     }
 }
