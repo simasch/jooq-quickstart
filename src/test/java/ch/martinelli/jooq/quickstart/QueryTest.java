@@ -115,11 +115,9 @@ class QueryTest {
     @Test
     void find_all_actors_with_films() {
         List<ActorWithFilms> actorWithFilms = dsl
-                .select(
-                        ACTOR.FIRST_NAME,
+                .select(ACTOR.FIRST_NAME,
                         ACTOR.LAST_NAME,
-                        multiset(dsl
-                                .select(FILM_ACTOR.film().TITLE)
+                        multiset(dsl.select(FILM_ACTOR.film().TITLE)
                                 .from(FILM_ACTOR)
                                 .where(FILM_ACTOR.ACTOR_ID.eq(ACTOR.ACTOR_ID)))
                                 .convertFrom(r -> r.map(mapping(ActorWithFilms.FilmName::new)))
